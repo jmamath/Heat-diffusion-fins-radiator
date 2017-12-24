@@ -1,0 +1,8 @@
+//Bash command :
+
+for((i=0;i<1024;i=i+10)) do echo "splot [-60:60] [-80:80] [0:50]'plot-$i' , 'plot-0'"; done > heat_animate.gp
+
+// Gnuplot command :
+set term gif animate delay 1
+set output 'heat_1.gif'
+load 'heat_animate.gp'
