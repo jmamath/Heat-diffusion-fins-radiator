@@ -1,0 +1,23 @@
+//=================================================
+// The rectangle
+//          a3
+//    --------------
+//    |            |
+//  a4|   c(  )    |a2
+//    |            |
+//    --------------
+//          a1
+
+   border a1(t=-20, 20){label=1; x= t; y = -12.5;};
+   border a2(t=-12.5, 12.5){label=2; x= 20; y = t;};
+   border a3(t=20, -20){label=3; x= t; y = 12.5;};
+   border a4(t=12.5, -12.5){label=4; x= -20; y = t;};
+
+// circle
+  border c(t=0, 2*pi){label=5; x= 4*cos(t); y = 4*sin(t);};
+
+// Meshing with a hole in the center
+   int l=60;int L=100; int n = 35;
+   mesh domain = buildmesh(a1(l)+a2(L)+a3(l)+a4(L)+c(-n));
+   savemesh(domain,"D.msh");
+   plot(domain,wait=1);
