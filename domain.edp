@@ -1,0 +1,24 @@
+    /* exercice 4.2, question 1 */
+//=================================================
+// le rectangle
+//          a3
+//    --------------
+//    |            |
+//  a4|            |a2
+//    |            |
+//    --------------
+//          a1
+
+   border a1(t=-20, 20){label=1; x= t; y = -12.5;};
+   border a2(t=-12.5, 12.5){label=2; x= 20; y = t;};
+   border a3(t=20, -20){label=3; x= t; y = 12.5;};
+   border a4(t=12.5, -12.5){label=4; x= -20; y = t;};
+
+// cercle
+  border c(t=0, 2*pi){label=5; x= 4*cos(t); y = 4*sin(t);};
+
+// maillage avec trou
+   int l=60;int L=100; int n = 35;
+   mesh rectangle = buildmesh(a1(l)+a2(L)+a3(l)+a4(L)+c(-n));
+   savemesh(rectangle,"D.msh");
+   plot(rectangle,wait=1);
