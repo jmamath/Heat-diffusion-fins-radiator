@@ -34,3 +34,8 @@ Before going to much in detail, if you want to run the simulation, you want all 
     * the array of triangles.
     * the array of boundary edges.
 * *GC.hpp* implement the conjugate gradient method to solve a well conditionned linear system. An example of how this method works is given in the file *Test/Ex_Utilisation_GC.cpp*
+* *main.cpp* contains all the functions and classes to execute the simulation. In particular, those are worth noticing:
+  * VirtualMatrice and addMatMul modeled the matrix described in the equation (1.6) of the document **simulation.pdf**
+  and compute the matrix-vector multiplication needed to solve the equation (1.5) with the conjugate gradient method
+  * L2 computes the l2 norm between two vectors, it is used in the main function to evaluate the termination criterion (convergence of the temperature solution)
+  * The main function initialize the temperature at t=0 and computes all the solution of the temperature until convergence.
