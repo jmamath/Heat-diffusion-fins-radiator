@@ -5,6 +5,8 @@ In this project we are going to study the diffusion of heat on a fins' radiator.
 ![Demo](https://user-images.githubusercontent.com/16581022/34326109-4645c7ba-e89d-11e7-9b0f-33a6615bc7df.gif)
 ![Demo](https://user-images.githubusercontent.com/16581022/34326126-9bcd3e16-e89d-11e7-8148-3dfce9371c9e.gif)
 
+Those animation shows a comparison between the temperature at t=0 and the evolution of the temperature over time. There is only one source modeled formally by the Dirichlet condition.
+
 ## Required Softwares
 * **C++** : I personally use  Xcode on macOS 10.12, but you can download Code::Blocks as an IDE and a compiler like GCC. 
 http://www.codeblocks.org/downloads
@@ -39,3 +41,14 @@ Before going to much in detail, if you want to run the simulation, you want all 
   and compute the matrix-vector multiplication needed to solve the equation (1.5) with the conjugate gradient method
   * L2 computes the l2 norm between two vectors, it is used in the main function to evaluate the termination criterion (convergence of the temperature solution)
   * The main function initialize the temperature at t=0 and computes all the solution of the temperature until convergence.
+  
+## Result expected  
+The solution take a while to be run and produces lots of data (3834 data files). This is time consuming because the mesh we have made is quite fine, so the calculation at each time step involve calculation of a big vector. One could make a coarse Mesh modifying the *domain.edp* file to speed up the process. 
+You can now plot the solution using gnuplot. Typically 
+```
+splot 'plot-i'
+```
+will output the temperature at time t=i.
+Since lots of files have been produces I though an animation could help illustrate the diffusion of temperature, if you want to do it, all the information are in the document /Animation/gif_making_instructions.txt.
+
+If you have any question, please feel free to contact me. This work was produces as a project in the simulation course at my master degree in Cheikh Anta Diop University of Dakar.
