@@ -14,13 +14,13 @@
 #include <fstream>
 #include <iostream>
 
-// Modules nÈcessaires
+// Required files
 #include "sfem.hpp"
 #include "RNM.hpp"
 #include "GC.hpp"
 
 
-// Les constantes physiques
+// Physical constant
 const R L=4. , H=20. ;
 const R T_0= 46, T_e=20 ;
 const R kond = 164.e-3, h_c = 200.e-6;
@@ -32,21 +32,21 @@ R ka(const Triangle & K){ return 1.;}   // diffusivitÈ
 R theta_0(const R2 & ){return 0;} // champ initial de temp.
 
 
-//  la classe pour modeliser la matrice  (Èq. 4.30)
+//  Class for matrix modeling (look at equation (1.6) in simulation.pdf )
 // ------------------------------------------
 
 class MatLap: public VirtualMatrice<R> { public:
     const  Mesh & Th;
-    const KN<bool> & Gamma_d;    //   true pour les sommets Dirichlet
-    R (*beta)(const Triangle &); // pointeur vers la fonction diffusivitÈ
+    const KN<bool> & Gamma_d;    //   true for Dirichlet vertices
+    R (*beta)(const Triangle &); // pointer on diffusivity's function
     
-    const R alpha;       // coef. (de masse)
-    const int Gamma_r;   // numÈro de de la frontiËre Robin
-    const R  alpha_r;    // coef. devant l'intÈgrale sur la frontiËre Robin
+    const R alpha;       // Mass coefficient
+    const int Gamma_r;   // Robin's boundary number
+    const R  alpha_r;    // Robin's boundary coefficient
     
     typedef  VirtualMatrice<R>::plusAx plusAx;
     
-    // constructeur (par dÈfaut) avec liste d'initialisation
+    // constructor
     MatLap(const  Mesh & T, const KN<bool> & g_d, R a,
            R (*b)(const Triangle &)=0, R a_r=0, int g_r=0)
     : Th(T),Gamma_d(g_d),alpha(a),beta(b),alpha_r(a_r), Gamma_r(g_r) {};
@@ -56,13 +56,12 @@ class MatLap: public VirtualMatrice<R> { public:
     
 };
 
-// La fonction qui calcule le produit matrice-vecteur pour
-// la mÈthode du gradient conjuguÈ
+// This function computes the matrix/vector product in equation (1.5)
+// for the conjugate gradient method
 // ------------------------------------------
 void MatLap::addMatMul(const  KN_<R>  & x, KN_<R> & Ax) const {
     
-    // intÈgrales sur Omega
-    // assemblage cf. algorithme 4.1
+    // Integrals on Omega
     //-----------------------------
     for (int k=0;k<Th.nt;k++)
     {
@@ -70,18 +69,18 @@ void MatLap::addMatMul(const  KN_<R>  & x, KN_<R> & Ax) const {
         int i0(Th(K[0])),i1(Th(K[1])),i2(Th(K[2])); // numÈros globaux des 3 sommets
         R ax0=0,ax1=0,ax2=0;
         
-        // contribution de  int w^i w^j
+        // contribution of w^i w^j integral
         //------------------------
-        if (alpha) { // (optimisation) ‡ calculer seulement si alpha diffÈrent de 0
+        if (alpha) { // (optimisation) ‡ compute only if alpha <> 0
             R cm = alpha*K.area/12.;
             ax0 += (2*x[i0]+  x[i1]+  x[i2])* cm;
             ax1 += (  x[i0]+2*x[i1]+  x[i2])* cm;
             ax2 += (  x[i0]+  x[i1]+2*x[i2])* cm; }
         
         
-        // contribution de  int nabla w^i \nabla w^j
+        // contribution of nabla w^i . nabla w^j integral
         //------------------------
-        if (beta) {  // (optimisation) ‡ calculer seulement si beta diffÈrent de 0
+        if (beta) {  // (optimisation) ‡ compute only if beta <> 0
             R2 H0(K.H(0)),H1(K.H(1)),H2(K.H(2));
             R2 gradx= H0*x[i0] + H1*x[i1] + H2*x[i2];
             R cl =  beta(K)*K.area ;
@@ -94,14 +93,14 @@ void MatLap::addMatMul(const  KN_<R>  & x, KN_<R> & Ax) const {
         if ( !Gamma_d[i2] ) Ax[i2] +=  ax2;
     }
     
-    // intÈgrales sur Gamma_R
+    // Integrals on Gamma_R
     //-----------------------------
     if (Gamma_r && alpha_r)
         for (int e=0;e<Th.neb;e++)
         {
             const  BoundaryEdge & E = Th.bedges[e];
             if (E.lab == Gamma_r){
-                int i = Th(E[0]),  j = Th(E[1]); // numÈros globaux des sommets de l'arÍte
+                int i = Th(E[0]),  j = Th(E[1]); // global numbers on edge vertices
                 R coef =  E.length()*alpha_r/6.;
                 if ( !Gamma_d[i] ) Ax[i] += coef*(x[i]*2+x[j]  );
                 if ( !Gamma_d[j] ) Ax[j] += coef*(x[i]  +x[j]*2);}
@@ -111,21 +110,11 @@ void MatLap::addMatMul(const  KN_<R>  & x, KN_<R> & Ax) const {
 
 
 
-// La fonction qui sauvegarde les rÈsultats 3D pour gnuplot
-// format (x,y,T) (grandeurs physiques)
+//  This function save the 3D result for gnuplot
+// format : (x,y,T) 
 // ------------------------------------------
 void gnuplotfile(const char * filename,const Mesh & Th,const KN<R> & x)
 {
-    /*
-     
-     filename : espace vide dans lequel on écrit
-     Th(it,0) : le sommet 0 du triangle it danns le maillage Th
-     x : la matrice theta dans la fonction principale
-     T_e : une constante
-     
-     */
-    
-    
     ofstream plot(filename);
     
     for(int it=0;it<Th.nt;it++)
@@ -137,7 +126,7 @@ void gnuplotfile(const char * filename,const Mesh & Th,const KN<R> & x)
     plot.close();
 }
 
-// La fonction qui calcule la norme L2
+// L2 norm
 // ------------------------------------------
 R NormeL2(Mesh & Th, KN_<R> & x)
 {
@@ -156,72 +145,71 @@ R NormeL2(Mesh & Th, KN_<R> & x)
 
 
 
-// La fonction principale
+
 // ------------------------------------------
 int main(int , char** )
 {
-    // lecture du maillage
+    // Mesh reading
     Mesh Th("D.msh");
     
-    // la frontiËre Dirichlet (Gamma_D) ‡ l'Ètiquette (label) 1
+    // Dirichlet boundary (Gamma_D) (label = 1)
     //  Gamma_d [i] == true  si  i sur Gamma_D
     //--------------------------
     KN<bool> Gamma_d(Th.nv);
     Gamma_d=false;
-    for (int i=0;i<Th.neb;i++) // neb Number of boundary edges
-        if (Th.bedges[i].lab==5)  // Condition Dirichlet
+    for (int i=0;i<Th.neb;i++) // neb : number of boundary edges
+        if (Th.bedges[i].lab==1)  // Dirichlet
             for (int j=0;j<2;j++)
                 Gamma_d[Th(Th.bedges[i][j])] = true;
     
-    // Les vecteurs nÈcessaires au calcul
+    // Necessary vector for the computation
     //-----------------------------
     KN<R> b(Th.nv),        // le second membre du systËme
-    theta_n(Th.nv),  // la solution theta^n
-    theta_o(Th.nv),  // la solution theta^{n-1}
-    bc(Th.nv) ;      // les valeurs imposÈes sur Gamma_D
+    theta_n(Th.nv),  //  U^n solution
+    theta_o(Th.nv),  // U^{n-1} solution
+    bc(Th.nv) ;      // constant on Gamma_D
     
-    // On impose les valeurs sur Gamma_D : theta=theta_D
+    // We force the value theta=theta_D on Gamma_D  
     //---------------------------
     for (int i=0;i<Th.nv;i++)
         if (Gamma_d[i])   bc[i] = theta_d;
         else bc[i] =0;
     
-    // Initialisation de la solution (t=0)
+    // Initialisation of U the temperature (t=0)
     //---------------------------
-    theta_n = bc;  // vÈrification des conditions de Dirichlet
-    for (int i=0;i<Th.nv;i++) // valeurs ‡ l'intÈrieur du domaine
+    theta_n = bc;  //  Dirichlet conditions
+    for (int i=0;i<Th.nv;i++) // Domain's interior values
         if ( !Gamma_d[i]) theta_n[i] =theta_0(Th(i));
     theta_o=0.;
     
     gnuplotfile("plot-0",Th,theta_n);
     
-    // On fixe le pas de temps
+    // We fix the time step
     //---------------------------
     R dt =0.5;
     
-    // DÈfinition de la matrice  A^{alpha,beta,alpha_R}
-    // avec alpha=1/(Delta t), beta=0, alpha_R=0
-    // (pour le second membre)
+    // Definition of the matrix  A^{alpha,beta,alpha_R}
+    // with alpha=1/(Delta t), beta=0, alpha_R=0
+    // for the second member see equation (1.5)
     //---------------------------
     MatLap M(Th,Gamma_d,1./dt);
     
-    // DÈfinition de la matrice A^{alpha,beta,alpha_R}
-    // avec alpha=1/\Delta t, beta=beta_K, alpha_R=c_robin
-    // (matrice du systËme)
+    // Definition of matrix A^{alpha,beta,alpha_R}
+    // with alpha=1/\Delta t, beta=beta_K, alpha_R=c_robin
+    // first member
     //---------------------------
     MatLap A(Th,Gamma_d,1./dt,ka,c_robin,4);
     
-    // DÈfinition de la matrice identitÈ
-    // (utilisÈe comme prÈconditionneur dans le gradient conjuguÈ)
+    // Identity matrix, used in conjugate gradient method
     //----------------------------
     MatriceIdentite<R> Id;
     
-    // Fichier qui va stocker les rÈsultats
+    // Result file
     //----------------------------
     char filename[256];
     
     
-    // Iteration en temps
+    // While loop
     //----------------------------
     R time=0;int iter=0;
     R eps=1.;
@@ -237,14 +225,14 @@ int main(int , char** )
         b =  M*theta_n;
         GradienConjugue(A,Id, b,theta_n,Th.nv,1e-6);
         
-        // calcul du critËre d'arrÍt $||\theta^n-\theta^{n-1}|| \le \varepsilon$
+        // Termination instruction $||\theta^n-\theta^{n-1}|| \le \varepsilon$
         theta_o=theta_n-theta_o;
         eps=NormeL2(Th,theta_o);
         cout<<" Norme diff ="<<eps<<endl;
         theta_o=theta_n;
         
         
-        // sauvegarde des fichiers rÈsultats
+        // Save the result
         //--------------------------------
         sprintf(filename,"plot-%d",iter); // nom du fichier gnuplot 3D
         gnuplotfile(filename,Th,theta_n);
